@@ -2,6 +2,7 @@ import json
 from datetime import datetime
 import logging
 import mimetypes
+from threading import Thread
 from pathlib import Path
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import urllib.parse
@@ -10,6 +11,8 @@ import urllib.parse
 
 
 BASE_DIR = Path()
+STORAGE_DIR = BASE_DIR / 'storage'
+STORAGE_FILE = STORAGE_DIR / 'data.json'
 
 
 class HttpHandler(BaseHTTPRequestHandler):
@@ -24,17 +27,23 @@ class HttpHandler(BaseHTTPRequestHandler):
             # перетворюємо рядок на словник
             data_dict = {key: value for key, value in [el.split('=') for el in data_parse.split('&')]}
             print(data_dict)
-            storage_path = Path("storage/data.json")
-            if storage_path.exists():
-                with open('storage/data.json', 'r', encoding='utf-8') as file:
-                    existing_data = json.load(file)
+
+            if STORAGE_FILE.exists():
+                try:
+                    with open(STORAGE_FILE, 'r', encoding='utf-8') as file:
+                        existing_data = json.load(file)
+                except json.JSONDecodeError:
+                    logging.error('JSONDecodeError')
+                    existing_data = {}
             else:
                 existing_data = {}
 
-            timestamp = datetime.now().strftime("%y%m%d%H%M%S")
+            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             existing_data[timestamp] = data_dict
-            with open('storage/data.json', 'w', encoding='utf-8') as file:
-                json.dump(data_dict, file, ensure_ascii=False, indent=4)
+
+            with open(STORAGE_FILE, 'w', encoding='utf-8') as file:
+                json.dump(existing_data, file, ensure_ascii=False, indent=4)
+
         except ValueError as err:
             logging.error(err)
         except OSError as err:
