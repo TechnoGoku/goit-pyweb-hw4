@@ -1,7 +1,10 @@
+import json
+import logging
 import mimetypes
 from pathlib import Path
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import urllib.parse
+
 # from datetime import datetime
 
 
@@ -16,12 +19,20 @@ class HttpHandler(BaseHTTPRequestHandler):
         # повертаємо дані до початкового вигляду
         data_parse = urllib.parse.unquote_plus(data.decode())
         print(data_parse)
-        # перетворюємо рядок на словник
-        data_dict = {key: value for key, value in [el.split('=') for el in data_parse.split('&')]}
+        try:
+            # перетворюємо рядок на словник
+            data_dict = {key: value for key, value in [el.split('=') for el in data_parse.split('&')]}
+            with open('storage/data.json', 'w', encoding='utf-8') as file:
+                json.dump(data_dict, file)
+        except ValueError as err:
+            logging.error(err)
+        except OSError as err:
+            logging.error(err)
+
         print(data_dict)
         # редірект
         self.send_response(302)
-        self.send_header('Location', '/')
+        self.send_header('Location', '/message')
         self.end_headers()
 
     def do_GET(self):
@@ -37,18 +48,6 @@ class HttpHandler(BaseHTTPRequestHandler):
                     self.send_static()
                 else:
                     self.send_html_file("error.html", 404)
-
-
-
-        # if pr_url.path == "/":
-        #     self.send_html_file("index.html")
-        # elif pr_url.path == "/message":
-        #     self.send_html_file("message.html")
-        # else:
-        #     if pathlib.Path().joinpath(pr_url.path[1:]).exists():
-        #         self.send_static()
-        #     else:
-        #         self.send_html_file("error.html", 404)
 
     def send_html_file(self, filename, status=200):
         self.send_response(status)
