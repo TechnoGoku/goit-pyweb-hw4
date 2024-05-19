@@ -8,7 +8,6 @@ from pathlib import Path
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import urllib.parse
 
-# from datetime import datetime
 
 
 BASE_DIR = Path()
