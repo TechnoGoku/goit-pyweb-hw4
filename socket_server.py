@@ -7,19 +7,19 @@ def main():
 
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     server_socket.bind((host, port))
-    server_socket.listen()
 
-    conn, address = server_socket.accept()
-    print(f"Connected by: {address}")
+    print(f"UDP server up and listening on {host}:{port}")
+
     while True:
-        msg = conn.recv(1024).decode()
+        msg, client_address = server_socket.recvfrom(1024)
+        msg = msg.decode()
         if not msg:
             break
-        print(f"Received by: {msg}")
+
+        print(f"Message from {client_address}: {msg}")
+
         message = input(">>> ")
-        conn.send(message.encode())
-    conn.close()
-    server_socket.close()
+        server_socket.send(message.encode(), client_address)
 
 
 if __name__ == '__main__':
