@@ -7,12 +7,16 @@ import urllib.parse
 
 class HttpHandler(BaseHTTPRequestHandler):
     def do_POST(self):
+        # отримання даних у застосунок з форми
         data = self.rfile.read(int(self.headers['Content-Length']))
         print(data)
+        # повертаємо дані до початкового вигляду
         data_parse = urllib.parse.unquote_plus(data.decode())
         print(data_parse)
+        # перетворюємо рядок на словник
         data_dict = {key: value for key, value in [el.split('=') for el in data_parse.split('&')]}
         print(data_dict)
+        # редірект
         self.send_response(302)
         self.send_header('Location', '/')
         self.end_headers()
