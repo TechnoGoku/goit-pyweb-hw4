@@ -1,8 +1,11 @@
 import mimetypes
-import pathlib
+from pathlib import Path
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import urllib.parse
 # from datetime import datetime
+
+
+BASE_DIR = Path()
 
 
 class HttpHandler(BaseHTTPRequestHandler):
@@ -23,15 +26,29 @@ class HttpHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         pr_url = urllib.parse.urlparse(self.path)
-        if pr_url.path == "/":
-            self.send_html_file("index.html")
-        elif pr_url.path == "/message":
-            self.send_html_file("message.html")
-        else:
-            if pathlib.Path().joinpath(pr_url.path[1:]).exists():
-                self.send_static()
-            else:
-                self.send_html_file("error.html", 404)
+        match pr_url.path:
+            case "/":
+                self.send_html_file("index.html")
+            case "/message":
+                self.send_html_file("message.html")
+            case _:
+                file = BASE_DIR.joinpath(pr_url.path[1:])
+                if file.exists():
+                    self.send_static()
+                else:
+                    self.send_html_file("error.html", 404)
+
+
+
+        # if pr_url.path == "/":
+        #     self.send_html_file("index.html")
+        # elif pr_url.path == "/message":
+        #     self.send_html_file("message.html")
+        # else:
+        #     if pathlib.Path().joinpath(pr_url.path[1:]).exists():
+        #         self.send_static()
+        #     else:
+        #         self.send_html_file("error.html", 404)
 
     def send_html_file(self, filename, status=200):
         self.send_response(status)
