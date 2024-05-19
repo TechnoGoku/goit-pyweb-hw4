@@ -1,12 +1,15 @@
+import mimetypes
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import urllib.parse
-from datetime import datetime
+
+
+# from datetime import datetime
 
 
 class HttpHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         pr_url = urllib.parse.urlparse(self.path)
-        if pr_url == "/":
+        if pr_url.path == "/":
             self.send_html_file("index.html")
         elif pr_url.path == "/message":
             self.send_html_file("message.html")
@@ -22,12 +25,25 @@ class HttpHandler(BaseHTTPRequestHandler):
 
 
 def run(server_class=HTTPServer, handler_class=HttpHandler):
-    server_address = ('', 3000)
+    server_address = ('localhost', 3000)
     http = server_class(server_address, handler_class)
     try:
         http.serve_forever()
     except KeyboardInterrupt:
         http.server_close()
+
+
+def send_static(self):
+    self.send_response(200)
+    mt = mimetypes.guess_type(self.path)
+    if mt:
+        self.send_header('Content-type', mt[0])
+    else:
+        self.send_header('Content-type', 'text/plain')
+    self.end_headers()
+    with open(self.path, 'rb') as file:
+        self.wfile.write(file.read())
+
 
 if __name__ == '__main__':
     run()
