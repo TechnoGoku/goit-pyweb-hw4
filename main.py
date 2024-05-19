@@ -22,14 +22,13 @@ class HttpHandler(BaseHTTPRequestHandler):
         try:
             # перетворюємо рядок на словник
             data_dict = {key: value for key, value in [el.split('=') for el in data_parse.split('&')]}
+            print(data_dict)
             with open('storage/data.json', 'w', encoding='utf-8') as file:
-                json.dump(data_dict, file)
+                json.dump(data_dict, file, ensure_ascii=False, indent=4)
         except ValueError as err:
             logging.error(err)
         except OSError as err:
             logging.error(err)
-
-        print(data_dict)
         # редірект
         self.send_response(302)
         self.send_header('Location', '/message')
