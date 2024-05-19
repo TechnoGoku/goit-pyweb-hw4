@@ -19,7 +19,7 @@ def main():
         print(f"Message from {client_address}: {msg}")
 
         message = input(">>> ")
-        server_socket.send(message.encode(), client_address)
+        server_socket.sendto(message.encode(), client_address)
 
 
 if __name__ == '__main__':
