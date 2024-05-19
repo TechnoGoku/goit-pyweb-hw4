@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 import logging
 import mimetypes
 from pathlib import Path
@@ -23,6 +24,15 @@ class HttpHandler(BaseHTTPRequestHandler):
             # перетворюємо рядок на словник
             data_dict = {key: value for key, value in [el.split('=') for el in data_parse.split('&')]}
             print(data_dict)
+            storage_path = Path("storage/data.json")
+            if storage_path.exists():
+                with open('storage/data.json', 'r', encoding='utf-8') as file:
+                    existing_data = json.load(file)
+            else:
+                existing_data = {}
+
+            timestamp = datetime.now().strftime("%y%m%d%H%M%S")
+            existing_data[timestamp] = data_dict
             with open('storage/data.json', 'w', encoding='utf-8') as file:
                 json.dump(data_dict, file, ensure_ascii=False, indent=4)
         except ValueError as err:
