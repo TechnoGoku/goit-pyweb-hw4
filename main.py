@@ -8,6 +8,12 @@ import urllib.parse
 
 
 class HttpHandler(BaseHTTPRequestHandler):
+    def do_POST(self):
+        data = self.rfile.read(int(self.headers['Content-Length']))
+        print(data)
+        data_parse = urllib.parse.unquote_plus(data.decode())
+        print(data_parse)
+
     def do_GET(self):
         pr_url = urllib.parse.urlparse(self.path)
         if pr_url.path == "/":
