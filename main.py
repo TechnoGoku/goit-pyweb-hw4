@@ -14,7 +14,7 @@ import urllib.parse
 BASE_DIR = Path()
 BUFFER_SIZE = 1024
 HTTP_PORT = 3000
-HTTP_HOST = 'localhost'
+HTTP_HOST = '0.0.0.0'
 SOCKET_HOST = '127.0.0.1'
 SOCKET_PORT = 5000
 STORAGE_DIR = BASE_DIR / 'storage'
@@ -27,7 +27,37 @@ class HttpHandler(BaseHTTPRequestHandler):
         size = int(self.headers['Content-Length'])
         data = self.rfile.read(int(size))
         print(data)
-
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        client_socket.sendto(data, (SOCKET_HOST, SOCKET_PORT))
+        client_socket.close()
+        # # повертаємо дані до початкового вигляду
+        # data_parse = urllib.parse.unquote_plus(data.decode())
+        # print(data_parse)
+        # try:
+        #     # перетворюємо рядок на словник
+        #     data_dict = {key: value for key, value in [el.split('=') for el in data_parse.split('&')]}
+        #     print(data_dict)
+        #
+        #     if STORAGE_FILE.exists():
+        #         try:
+        #             with open(STORAGE_FILE, 'r', encoding='utf-8') as file:
+        #                 existing_data = json.load(file)
+        #         except json.JSONDecodeError:
+        #             logging.error('JSONDecodeError')
+        #             existing_data = {}
+        #     else:
+        #         existing_data = {}
+        #
+        #     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        #     existing_data[timestamp] = data_dict
+        #
+        #     with open(STORAGE_FILE, 'w', encoding='utf-8') as file:
+        #         json.dump(existing_data, file, ensure_ascii=False, indent=4)
+        #
+        # except ValueError as err:
+        #     logging.error(err)
+        # except OSError as err:
+        #     logging.error(err)
         # редірект
         self.send_response(302)
         self.send_header('Location', '/message')
@@ -97,14 +127,35 @@ def save_data_from_form(data):
         logging.error(err)
 
 
-def run(server_class=HTTPServer, handler_class=HttpHandler):
-    server_address = ('localhost', 3000)
-    http = server_class(server_address, handler_class)
+def run_socket_server(host, port):
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    server_socket.bind((host, port))
+    logging.info("Started socket server")
     try:
-        http.serve_forever()
+        while True:
+            msg, client_address = server_socket.recvfrom(BUFFER_SIZE)
+            save_data_from_form(msg)
     except KeyboardInterrupt:
-        http.server_close()
+        pass
+    finally:
+        server_socket.close()
+
+
+def run_http_server(host, port):
+    address = (host, port)
+    http_server = HTTPServer(address, HttpHandler)
+    logging.info("Started http server")
+    try:
+        http_server.serve_forever()
+    except KeyboardInterrupt:
+        http_server.server_close()
 
 
 if __name__ == '__main__':
-    run()
+    logging.basicConfig(level=logging.DEBUG, format='%(threadName)s %(message)s')
+
+    server = Thread(target=run_http_server, args=(HTTP_HOST, HTTP_PORT))
+    server.start()
+
+    socket_server = Thread(target=run_socket_server, args=(SOCKET_HOST, SOCKET_PORT))
+    socket_server.start()
