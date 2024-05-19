@@ -26,38 +26,10 @@ class HttpHandler(BaseHTTPRequestHandler):
         # отримання даних у застосунок з форми
         size = int(self.headers['Content-Length'])
         data = self.rfile.read(int(size))
-        print(data)
+
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         client_socket.sendto(data, (SOCKET_HOST, SOCKET_PORT))
         client_socket.close()
-        # # повертаємо дані до початкового вигляду
-        # data_parse = urllib.parse.unquote_plus(data.decode())
-        # print(data_parse)
-        # try:
-        #     # перетворюємо рядок на словник
-        #     data_dict = {key: value for key, value in [el.split('=') for el in data_parse.split('&')]}
-        #     print(data_dict)
-        #
-        #     if STORAGE_FILE.exists():
-        #         try:
-        #             with open(STORAGE_FILE, 'r', encoding='utf-8') as file:
-        #                 existing_data = json.load(file)
-        #         except json.JSONDecodeError:
-        #             logging.error('JSONDecodeError')
-        #             existing_data = {}
-        #     else:
-        #         existing_data = {}
-        #
-        #     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        #     existing_data[timestamp] = data_dict
-        #
-        #     with open(STORAGE_FILE, 'w', encoding='utf-8') as file:
-        #         json.dump(existing_data, file, ensure_ascii=False, indent=4)
-        #
-        # except ValueError as err:
-        #     logging.error(err)
-        # except OSError as err:
-        #     logging.error(err)
         # редірект
         self.send_response(302)
         self.send_header('Location', '/message')
@@ -134,6 +106,7 @@ def run_socket_server(host, port):
     try:
         while True:
             msg, client_address = server_socket.recvfrom(BUFFER_SIZE)
+            logging.info(f"Socket received {client_address}: {msg}")
             save_data_from_form(msg)
     except KeyboardInterrupt:
         pass
